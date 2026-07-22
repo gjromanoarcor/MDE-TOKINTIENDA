@@ -9,20 +9,26 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
-    --paper:#F2EEE3;
-    --charcoal:#1E2420;
-    --charcoal-soft:#2B322C;
-    --rust:#B23A2E;
-    --rust-dark:#8C2C22;
+    --bg:#14170F;
+    --surface:#1C2016;
+    --surface-alt:#262B1E;
+    --surface-hover:#2C3324;
+    --text:#EBE7D9;
+    --text-dim:#9CA491;
+    --text-dim2:#6E7566;
+    --line:#3A4133;
+    --rust:#E2685A;
+    --rust-dark:#C24F42;
     --amber:#E2A63B;
-    --teal:#3F7A67;
-    --line:#C9C2AC;
-    --ink:#1E2420;
+    --green:#4FAE73;
+    --green-dark:#3B8C5B;
+    --teal:#59C6A4;
+    --ink:#EBE7D9;
   }
   *{box-sizing:border-box;}
   body{
     margin:0;
-    background:var(--paper);
+    background:var(--bg);
     color:var(--ink);
     font-family:'Inter',sans-serif;
     -webkit-font-smoothing:antialiased;
@@ -31,10 +37,11 @@
 
   /* ---------- HEADER ---------- */
   header{
-    background:var(--charcoal);
-    color:var(--paper);
+    background:var(--surface-alt);
+    color:var(--text);
     padding:36px 0 0;
     margin-bottom:44px;
+    border-bottom:1px solid var(--line);
   }
   header .wrap{padding-bottom:0;}
   .eyebrow{
@@ -51,11 +58,12 @@
     font-size:clamp(28px,4vw,42px);
     margin:0 0 8px;
     letter-spacing:-.01em;
+    color:var(--text);
   }
   header p.sub{
     font-family:'Inter',sans-serif;
     font-size:15px;
-    color:#C7CDC5;
+    color:var(--text-dim);
     max-width:640px;
     margin:0 0 30px;
     line-height:1.55;
@@ -66,20 +74,20 @@
     display:flex;
     align-items:center;
     gap:0;
-    border-top:1px solid #3A423C;
+    border-top:1px solid var(--line);
     padding:22px 0;
     overflow-x:auto;
   }
   .stage{
     font-family:'JetBrains Mono',monospace;
     font-size:12px;
-    color:#8A9189;
+    color:var(--text-dim2);
     white-space:nowrap;
     display:flex;
     align-items:center;
     gap:10px;
   }
-  .stage b{color:var(--paper);font-weight:600;}
+  .stage b{color:var(--text);font-weight:600;}
   .stage .dot{
     width:7px;height:7px;border-radius:50%;
     background:var(--amber);
@@ -89,7 +97,7 @@
     flex:1;
     min-width:60px;
     height:1px;
-    background:repeating-linear-gradient(90deg,#54594F 0,#54594F 6px,transparent 6px,transparent 12px);
+    background:repeating-linear-gradient(90deg,#414938 0,#414938 6px,transparent 6px,transparent 12px);
     position:relative;
     margin:0 18px;
   }
@@ -98,7 +106,7 @@
     position:absolute;
     top:-3px;left:0;
     width:7px;height:7px;
-    background:var(--rust);
+    background:var(--green);
     border-radius:1px;
     transform:rotate(45deg);
     animation:crate 3.2s linear infinite;
@@ -114,7 +122,7 @@
   /* ---------- SECTIONS ---------- */
   section{margin-bottom:40px;}
   .card{
-    background:#fff;
+    background:var(--surface);
     border:1px solid var(--line);
     border-radius:2px;
   }
@@ -131,11 +139,12 @@
     font-size:18px;
     margin:0;
     font-weight:700;
+    color:var(--text);
   }
   .card-head .n{
     font-family:'JetBrains Mono',monospace;
     font-size:11px;
-    color:#8A8478;
+    color:var(--text-dim2);
     letter-spacing:.08em;
     text-transform:uppercase;
   }
@@ -146,16 +155,17 @@
     min-height:190px;
     resize:vertical;
     border:1px solid var(--line);
-    background:#FBFAF6;
+    background:var(--surface-alt);
     font-family:'JetBrains Mono',monospace;
     font-size:13px;
     line-height:1.5;
     padding:14px;
-    color:var(--ink);
+    color:var(--text);
     border-radius:2px;
   }
+  textarea::placeholder{color:var(--text-dim2);}
   textarea:focus, input:focus, td[contenteditable]:focus{
-    outline:2px solid var(--rust);
+    outline:2px solid var(--green);
     outline-offset:1px;
   }
 
@@ -173,29 +183,29 @@
     letter-spacing:.01em;
   }
   button:active{transform:translateY(1px);}
-  .btn-primary{background:var(--rust);color:#fff;}
-  .btn-primary:hover{background:var(--rust-dark);}
-  .btn-primary:disabled{background:#C9A79F;cursor:not-allowed;}
-  .btn-ghost{background:transparent;color:var(--charcoal);border:1px solid var(--line);}
-  .btn-ghost:hover{border-color:var(--charcoal);}
-  .btn-amber{background:var(--amber);color:var(--charcoal);}
-  .btn-amber:hover{filter:brightness(0.95);}
+  .btn-primary{background:var(--green);color:#0E140F;}
+  .btn-primary:hover{background:var(--green-dark);color:#fff;}
+  .btn-primary:disabled{background:#3E4A40;color:var(--text-dim2);cursor:not-allowed;}
+  .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--text-dim);}
+  .btn-amber{background:var(--amber);color:#241B08;}
+  .btn-amber:hover{filter:brightness(1.08);}
 
   .status{
     font-family:'JetBrains Mono',monospace;
     font-size:12.5px;
-    color:#8A8478;
+    color:var(--text-dim2);
   }
-  .status.err{color:var(--rust-dark);}
+  .status.err{color:var(--rust);}
   .status.ok{color:var(--teal);}
   .hint-text{
     font-family:'Inter',sans-serif;
     font-size:13px;
-    color:#5A5648;
+    color:var(--text-dim);
     line-height:1.55;
     margin:0 0 14px;
   }
-  .hint-text a{color:var(--rust-dark);}
+  .hint-text a{color:var(--amber);}
 
   .filelabel{
     display:block;
@@ -203,28 +213,31 @@
     font-size:11px;
     text-transform:uppercase;
     letter-spacing:.06em;
-    color:#7A7566;
+    color:var(--text-dim);
     margin-bottom:6px;
   }
-  input[type="file"]{
+  input[type="file"], input[type="password"], input[type="text"], select{
     font-family:'Inter',sans-serif;
     font-size:13px;
     max-width:100%;
+    background:var(--surface-alt);
+    color:var(--text);
+    border:1px solid var(--line);
   }
   .filehint{
     font-family:'JetBrains Mono',monospace;
     font-size:11.5px;
-    color:#9C9587;
+    color:var(--text-dim2);
     margin-top:6px;
   }
   .filehint.set{color:var(--teal);}
 
   /* ---------- TABLE ---------- */
   .tablewrap{overflow-x:auto;border:1px solid var(--line);}
-  table{border-collapse:collapse;width:100%;min-width:1400px;font-size:12.5px;}
+  table{border-collapse:collapse;width:100%;min-width:1300px;font-size:12.5px;}
   th{
-    background:var(--charcoal-soft);
-    color:var(--paper);
+    background:var(--surface-alt);
+    color:var(--text);
     font-family:'JetBrains Mono',monospace;
     font-weight:500;
     text-transform:uppercase;
@@ -237,20 +250,21 @@
     white-space:nowrap;
   }
   td{
-    border-bottom:1px solid #E7E1D2;
-    border-right:1px solid #EFEAE0;
+    border-bottom:1px solid var(--line);
+    border-right:1px solid var(--line);
     padding:9px 10px;
     font-family:'JetBrains Mono',monospace;
     vertical-align:top;
     min-width:110px;
     max-width:260px;
+    color:var(--text);
   }
-  td[contenteditable]{background:#fff;}
-  td[contenteditable]:hover{background:#FBFAF6;}
-  tr:nth-child(even) td{background:#FAF8F2;}
-  tr:nth-child(even) td[contenteditable]:hover{background:#F3EFE3;}
+  td[contenteditable]{background:var(--surface);}
+  td[contenteditable]:hover{background:var(--surface-hover);}
+  tr:nth-child(even) td{background:var(--surface-alt);}
+  tr:nth-child(even) td[contenteditable]:hover{background:var(--surface-hover);}
   tr.row-new td{
-    background:#FBF0DD !important;
+    background:#3D3A1C !important;
     transition:background 2s ease;
   }
   td.name{font-weight:600;min-width:200px;}
@@ -263,11 +277,11 @@
     min-width:32px;
     max-width:32px;
   }
-  td.del:hover{background:#FBE9E7;}
+  td.del:hover{background:#3A2622;}
   .empty-hint{
     padding:38px 22px;
     text-align:center;
-    color:#9C9587;
+    color:var(--text-dim2);
     font-family:'JetBrains Mono',monospace;
     font-size:13px;
   }
@@ -278,7 +292,7 @@
     border-top:1px solid var(--line);
     font-family:'JetBrains Mono',monospace;
     font-size:11.5px;
-    color:#9C9587;
+    color:var(--text-dim2);
   }
 </style>
 </head>
@@ -288,7 +302,7 @@
   <div class="wrap">
     <p class="eyebrow">Herramienta interna · Operaciones</p>
     <h1>Altas Arcor → Tokin</h1>
-    <p class="sub">Pegá el mail y/o adjuntá el Brief Comercial. La herramienta toma código, categoría y conversiones directo del brief, y la IA completa nombre, marca, subcategoría y palabras clave — vos revisás y pegás directo en la planilla.</p>
+    <p class="sub">Pegá el mail y/o adjuntá el Brief Comercial. La herramienta toma código, categoría y conversiones directo del brief, y la IA completa nombre, marca y subcategoría — vos revisás y pegás directo en la planilla.</p>
     <div class="pipeline">
       <div class="stage"><span class="dot"></span> <b>01</b>&nbsp;Mail recibido</div>
       <div class="track"></div>
@@ -342,7 +356,7 @@
         <div class="filehint" id="briefFileName">Ningún archivo elegido</div>
 
         <div class="row" style="margin-top:20px;">
-          <button class="btn-primary" id="processBtn">▶ Extraer producto</button>
+          <button class="btn-primary" id="processBtn">⬆ Subir info a la tabla</button>
           <button class="btn-ghost" id="clearInputBtn">Limpiar todo</button>
           <span class="status" id="status"></span>
         </div>
@@ -361,8 +375,7 @@
           <thead>
             <tr>
               <th>Fecha de Carga</th>
-              <th>Nombre Tokin</th>
-              <th>Palabras Claves</th>
+              <th>Nombre Producto</th>
               <th>Marca</th>
               <th>Categoría</th>
               <th>Subcategoria</th>
@@ -378,7 +391,7 @@
           <tbody id="tbody">
           </tbody>
         </table>
-        <div class="empty-hint" id="emptyHint">Todavía no hay productos cargados. Pegá un mail arriba y tocá "Extraer productos".</div>
+        <div class="empty-hint" id="emptyHint">Todavía no hay productos cargados. Pegá un mail o adjuntá el brief arriba y tocá "Subir info a la tabla".</div>
       </div>
       <div class="card-body" style="padding-top:16px;">
         <div class="row">
@@ -412,8 +425,8 @@
 </footer>
 
 <script>
-const COLS = ["fecha","nombre","palabras","marca","categoria","subcategoria","codigo","conv1","conv2","especificacion","estado","comentarios"];
-const HEADERS = ["Fecha de Carga","Nombre Tokin","Palabras Claves","Marca","Categoría","Subcategoria","Código Arcor","Conversión 1","Conversión 2","Especificación","Estado","Comentarios"];
+const COLS = ["fecha","nombre","marca","categoria","subcategoria","codigo","conv1","conv2","especificacion","estado","comentarios"];
+const HEADERS = ["Fecha de Carga","Nombre Producto","Marca","Categoría","Subcategoria","Código Arcor","Conversión 1","Conversión 2","Especificación","Estado","Comentarios"];
 
 let rows = [];
 
@@ -694,8 +707,7 @@ async function extractProducts(text){
   const systemPrompt = `Sos un asistente que extrae datos de productos Arcor de mails internos para cargar en una planilla de altas. Devolvé SIEMPRE y ÚNICAMENTE un array JSON válido, sin texto adicional, sin markdown, sin \`\`\`.
 
 Cada producto es un objeto con EXACTAMENTE estas claves (string, "" si no hay dato):
-"nombre" (Nombre Tokin: nombre + gramaje del producto, formato similar a "PRODUCTO MARCA VARIANTE 60GR"),
-"palabras" (Palabras Claves: lista de sinónimos/variantes de escritura separados por coma, útiles para buscar el producto, en mayúsculas),
+"nombre" (Nombre Producto: nombre + gramaje del producto, formato similar a "PRODUCTO MARCA VARIANTE 60GR"),
 "marca",
 "categoria",
 "subcategoria",
@@ -708,7 +720,7 @@ Cada producto es un objeto con EXACTAMENTE estas claves (string, "" si no hay da
 Usá esta referencia del criterio interno para mantener consistencia (marca, categoría/subcategoría, formato de especificación y conversión):
 ${REFERENCE}
 
-Si el mail menciona varios productos, devolvé un objeto por cada uno. Si falta un dato (por ejemplo no hay código de artículo en el texto), dejá ese campo como string vacío "" en vez de inventarlo u omitirlo — el objeto siempre debe tener las 9 claves.`;
+Si el mail menciona varios productos, devolvé un objeto por cada uno. Si falta un dato (por ejemplo no hay código de artículo en el texto), dejá ese campo como string vacío "" en vez de inventarlo u omitirlo — el objeto siempre debe tener las 8 claves.`;
 
   const data = await callClaude(
     [ { role: "user", content: text } ],
@@ -732,10 +744,9 @@ async function extractWithBrief(brief, emailText){
     brief.reemplaza ? `- Reemplaza a: ${brief.reemplaza}` : '',
     '',
     'Tu tarea es completar SOLO estos campos, en base a la Descripción JDE/ampliada y al texto del mail (si lo hay):',
-    '- nombre: Nombre Tokin, estilo "PRODUCTO MARCA VARIANTE GRAMAJE" en base a la Descripción JDE/ampliada.',
+    '- nombre: Nombre Producto, estilo "PRODUCTO MARCA VARIANTE GRAMAJE" en base a la Descripción JDE/ampliada.',
     '- marca: la marca del producto (ej Mogul, Cofler, Rocklets), a partir del nombre/descripción o del mail.',
     '- subcategoria: el tipo de producto (ej Gomitas, Chupetines, Caramelos, Tabletas), coherente con el Negocio informado.',
-    '- palabras: palabras clave / variantes de escritura en mayúsculas separadas por coma, útiles para buscar el producto.',
     '- especificacion: "UN-DI-BU" o "UN-BU-DI" según el orden de empaque; "UN-DI-BU" si no hay forma de saberlo.',
     '- comentarios: aclaraciones relevantes (ej. reemplaza a otro código, falta de foto, sin material POP) — "" si no hay nada relevante. Ignorá precios, cobertura, política comercial: eso no va en la planilla de Tokin.',
     '',
@@ -744,7 +755,7 @@ async function extractWithBrief(brief, emailText){
     '',
     emailText ? ('Texto del mail:\n' + emailText) : '',
     '',
-    'Devolvé SIEMPRE y ÚNICAMENTE un objeto JSON (no un array) con EXACTAMENTE las claves: nombre, marca, subcategoria, palabras, especificacion, comentarios. Todas deben estar presentes (usá "" si no hay dato). Sin texto adicional, sin markdown.'
+    'Devolvé SIEMPRE y ÚNICAMENTE un objeto JSON (no un array) con EXACTAMENTE las claves: nombre, marca, subcategoria, especificacion, comentarios. Todas deben estar presentes (usá "" si no hay dato). Sin texto adicional, sin markdown.'
   ].filter(Boolean).join('\n');
 
   const data = await callClaude([ { role: "user", content: contextLines } ]);
@@ -757,7 +768,6 @@ async function extractWithBrief(brief, emailText){
   return {
     fecha: todayStr(),
     nombre: parsed.nombre || brief.descAmpliada || brief.descJDE || '',
-    palabras: parsed.palabras || '',
     marca: parsed.marca || '',
     categoria: brief.negocio || '',
     subcategoria: parsed.subcategoria || '',
@@ -812,7 +822,6 @@ document.getElementById('processBtn').addEventListener('click', async () => {
         row = {
           fecha: todayStr(),
           nombre: brief.descAmpliada || brief.descJDE || '',
-          palabras: '',
           marca: '',
           categoria: brief.negocio || '',
           subcategoria: '',
@@ -824,7 +833,7 @@ document.getElementById('processBtn').addEventListener('click', async () => {
           comentarios: ''
         };
         addRows([row]);
-        statusEl.textContent = 'Se agregó la fila con los datos del brief, pero la IA no pudo completar nombre/marca/subcategoría/palabras clave (' + aiErr.message + '). Completalos a mano.';
+        statusEl.textContent = 'Se agregó la fila con los datos del brief, pero la IA no pudo completar nombre/marca/subcategoría (' + aiErr.message + '). Completalos a mano.';
         statusEl.className = 'status err';
         return;
       }
@@ -841,7 +850,7 @@ document.getElementById('processBtn').addEventListener('click', async () => {
         addRows([{
           fecha: todayStr(),
           nombre: text.length > 90 ? text.slice(0,90) + '…' : text,
-          palabras: '', marca: '', categoria: '', subcategoria: '',
+          marca: '', categoria: '', subcategoria: '',
           codigo: '', conv1: '', conv2: '', especificacion: 'UN-DI-BU',
           estado: 'Completo', comentarios: ''
         }]);
@@ -853,7 +862,6 @@ document.getElementById('processBtn').addEventListener('click', async () => {
       const newRows = products.map(p => ({
         fecha: today,
         nombre: p.nombre || '',
-        palabras: p.palabras || '',
         marca: p.marca || '',
         categoria: p.categoria || '',
         subcategoria: p.subcategoria || '',
