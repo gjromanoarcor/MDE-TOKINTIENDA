@@ -210,12 +210,6 @@
     margin-top:6px;
   }
   .filehint.set{color:var(--teal);}
-  .thumbrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
-  .thumbrow img{
-    width:56px;height:56px;object-fit:cover;
-    border:1px solid var(--line);
-    border-radius:2px;
-  }
 
   /* ---------- TABLE ---------- */
   .tablewrap{overflow-x:auto;border:1px solid var(--line);}
@@ -247,6 +241,10 @@
   td[contenteditable]:hover{background:#FBFAF6;}
   tr:nth-child(even) td{background:#FAF8F2;}
   tr:nth-child(even) td[contenteditable]:hover{background:#F3EFE3;}
+  tr.row-new td{
+    background:#FBF0DD !important;
+    transition:background 2s ease;
+  }
   td.name{font-weight:600;min-width:200px;}
   td.del{
     font-family:'Inter',sans-serif;
@@ -282,7 +280,7 @@
   <div class="wrap">
     <p class="eyebrow">Herramienta interna · Operaciones</p>
     <h1>Altas Arcor → Tokin</h1>
-    <p class="sub">Pegá el mail y/o adjuntá el Brief Comercial y la foto del producto. La herramienta toma código, categoría y conversiones directo del brief, y la IA completa nombre, marca, subcategoría y palabras clave — vos revisás y pegás directo en la planilla.</p>
+    <p class="sub">Pegá el mail y/o adjuntá el Brief Comercial. La herramienta toma código, categoría y conversiones directo del brief, y la IA completa nombre, marca, subcategoría y palabras clave — vos revisás y pegás directo en la planilla.</p>
     <div class="pipeline">
       <div class="stage"><span class="dot"></span> <b>01</b>&nbsp;Mail recibido</div>
       <div class="track"></div>
@@ -312,8 +310,8 @@
   <section>
     <div class="card">
       <div class="card-head">
-        <h2>2 · Adjuntar Brief Comercial e imagen</h2>
-        <span class="n">Opcional — mejora la precisión</span>
+        <h2>2 · Adjuntar Brief Comercial</h2>
+        <span class="n">Opcional — si lo adjuntás, el código, categoría y conversiones salen de ahí (no los inventa la IA)</span>
       </div>
       <div class="card-body">
         <div class="row" style="align-items:flex-start;">
@@ -321,11 +319,6 @@
             <label class="filelabel">Brief Comercial (.xlsx)</label>
             <input type="file" id="briefInput" accept=".xlsx,.xls">
             <div class="filehint" id="briefFileName">Ningún archivo elegido</div>
-          </div>
-          <div style="flex:1;min-width:240px;">
-            <label class="filelabel">Imagen/es de producto</label>
-            <input type="file" id="imageInput" accept="image/*" multiple>
-            <div class="filehint" id="imageFileNames">Ningún archivo elegido</div>
           </div>
         </div>
         <div class="row">
@@ -422,6 +415,7 @@ function render(){
 
   rows.forEach((r, idx) => {
     const tr = document.createElement('tr');
+    if(r.__isNew){ tr.classList.add('row-new'); }
     COLS.forEach(col => {
       const td = document.createElement('td');
       td.contentEditable = 'true';
@@ -440,6 +434,19 @@ function render(){
   });
 }
 
+function addRows(newRows){
+  rows.forEach(r => { delete r.__isNew; });
+  newRows.forEach(r => { r.__isNew = true; });
+  rows = rows.concat(newRows);
+  render();
+  const tablewrap = document.querySelector('.tablewrap');
+  if(tablewrap) tablewrap.scrollIntoView({behavior:'smooth', block:'center'});
+  setTimeout(() => {
+    rows.forEach(r => { delete r.__isNew; });
+    render();
+  }, 2600);
+}
+
 function blankRow(){
   const r = {};
   COLS.forEach(c => r[c] = '');
@@ -456,17 +463,12 @@ document.getElementById('addRowBtn').addEventListener('click', () => {
 document.getElementById('clearInputBtn').addEventListener('click', () => {
   document.getElementById('emailInput').value = '';
   briefInput.value = '';
-  imageInput.value = '';
   briefFileName.textContent = 'Ningún archivo elegido';
   briefFileName.className = 'filehint';
-  imageFileNames.textContent = 'Ningún archivo elegido';
-  imageFileNames.className = 'filehint';
 });
 
 const briefInput = document.getElementById('briefInput');
-const imageInput = document.getElementById('imageInput');
 const briefFileName = document.getElementById('briefFileName');
-const imageFileNames = document.getElementById('imageFileNames');
 
 briefInput.addEventListener('change', () => {
   if(briefInput.files.length){
@@ -477,15 +479,6 @@ briefInput.addEventListener('change', () => {
     briefFileName.className = 'filehint';
   }
 });
-imageInput.addEventListener('change', () => {
-  if(imageInput.files.length){
-    imageFileNames.textContent = Array.from(imageInput.files).map(f=>f.name).join(', ');
-    imageFileNames.className = 'filehint set';
-  }else{
-    imageFileNames.textContent = 'Ningún archivo elegido';
-    imageFileNames.className = 'filehint';
-  }
-});
 
 // ---------- Brief xlsx parsing (deterministic, no IA) ----------
 function readFileAsArrayBuffer(file){
@@ -494,15 +487,6 @@ function readFileAsArrayBuffer(file){
     r.onload = () => res(r.result);
     r.onerror = () => rej(new Error('No se pudo leer el archivo ' + file.name));
     r.readAsArrayBuffer(file);
-  });
-}
-
-function readFileAsBase64(file){
-  return new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = () => res(r.result.split(',')[1]);
-    r.onerror = () => rej(new Error('No se pudo leer la imagen ' + file.name));
-    r.readAsDataURL(file);
   });
 }
 
@@ -547,6 +531,32 @@ async function parseBrief(file){
   };
 }
 
+// ---------- Robust JSON extraction from model output ----------
+function extractJSON(rawText){
+  let cleaned = rawText.trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+  try{
+    return JSON.parse(cleaned);
+  }catch(e){ /* fall through */ }
+
+  // Fallback: grab the outermost [...] or {...} block, in case the model
+  // added stray text before/after the JSON despite instructions.
+  const firstArr = cleaned.indexOf('[');
+  const firstObj = cleaned.indexOf('{');
+  let start = -1, endChar = '';
+  if(firstArr !== -1 && (firstObj === -1 || firstArr < firstObj)){ start = firstArr; endChar = ']'; }
+  else if(firstObj !== -1){ start = firstObj; endChar = '}'; }
+
+  if(start !== -1){
+    const end = cleaned.lastIndexOf(endChar);
+    if(end > start){
+      try{
+        return JSON.parse(cleaned.slice(start, end+1));
+      }catch(e){ /* give up below */ }
+    }
+  }
+  throw new Error('La IA no devolvió un JSON válido. Probá de nuevo, o simplificá el texto del mail.');
+}
+
 const REFERENCE = `
 MARCAS habituales: Arcor, Aguila, Bon o Bon, Cofler, Rocklets, Mogul, Mogul Extreme, Chocolinas, Saladix, Sugus, Menthoplus, Topline, Topline Seven, Bagley, Noel, La Campagnola, Salsati, Traviata, Butter Toffees, Hamlet, Mr Pop, Misky, Raptor, Alka, Fizz, Flics, Cabsha, Tofi, Cereal Mix, Mana, Porteñitas, Macucas, Ramen, Mister Pops.
 
@@ -589,7 +599,7 @@ Cada producto es un objeto con EXACTAMENTE estas claves (string, "" si no hay da
 Usá esta referencia del criterio interno para mantener consistencia (marca, categoría/subcategoría, formato de especificación y conversión):
 ${REFERENCE}
 
-Si el mail menciona varios productos, devolvé un objeto por cada uno. Si falta un dato, dejá el campo vacío en vez de inventarlo.`;
+Si el mail menciona varios productos, devolvé un objeto por cada uno. Si falta un dato (por ejemplo no hay código de artículo en el texto), dejá ese campo como string vacío "" en vez de inventarlo u omitirlo — el objeto siempre debe tener las 9 claves.`;
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -610,19 +620,12 @@ Si el mail menciona varios productos, devolvé un objeto por cada uno. Si falta 
 
   const data = await response.json();
   const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
-  let cleaned = textBlocks.trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
-
-  let parsed;
-  try{
-    parsed = JSON.parse(cleaned);
-  }catch(e){
-    throw new Error('No se pudo interpretar la respuesta de la IA. Probá de nuevo o simplificá el texto del mail.');
-  }
+  let parsed = extractJSON(textBlocks);
   if(!Array.isArray(parsed)) parsed = [parsed];
   return parsed;
 }
 
-async function extractWithBrief(brief, emailText, imageFiles){
+async function extractWithBrief(brief, emailText){
   const contextLines = [
     'Datos ya confirmados, tomados directamente del Brief Comercial oficial (NO los reinterpretes, son exactos):',
     brief.codigo ? `- Código Producto: ${brief.codigo}` : '',
@@ -633,10 +636,10 @@ async function extractWithBrief(brief, emailText, imageFiles){
     brief.dispXBulto ? `- Display/Bolsas x Bulto: ${brief.dispXBulto}` : '',
     brief.reemplaza ? `- Reemplaza a: ${brief.reemplaza}` : '',
     '',
-    'Tu tarea es completar SOLO estos campos, mirando la/las imagen(es) de producto adjuntas (si las hay) y el texto del mail (si lo hay):',
+    'Tu tarea es completar SOLO estos campos, en base a la Descripción JDE/ampliada y al texto del mail (si lo hay):',
     '- nombre: Nombre Tokin, estilo "PRODUCTO MARCA VARIANTE GRAMAJE" en base a la Descripción JDE/ampliada.',
-    '- marca: la marca que se ve impresa en el packaging de la imagen (ej Mogul, Cofler, Rocklets). Si no hay imagen, inferí de la descripción.',
-    '- subcategoria: el tipo de producto que se ve (ej Gomitas, Chupetines, Caramelos, Tabletas), coherente con el Negocio informado.',
+    '- marca: la marca del producto (ej Mogul, Cofler, Rocklets), a partir del nombre/descripción o del mail.',
+    '- subcategoria: el tipo de producto (ej Gomitas, Chupetines, Caramelos, Tabletas), coherente con el Negocio informado.',
     '- palabras: palabras clave / variantes de escritura en mayúsculas separadas por coma, útiles para buscar el producto.',
     '- especificacion: "UN-DI-BU" o "UN-BU-DI" según el orden de empaque; "UN-DI-BU" si no hay forma de saberlo.',
     '- comentarios: aclaraciones relevantes (ej. reemplaza a otro código, falta de foto, sin material POP) — "" si no hay nada relevante. Ignorá precios, cobertura, política comercial: eso no va en la planilla de Tokin.',
@@ -646,14 +649,8 @@ async function extractWithBrief(brief, emailText, imageFiles){
     '',
     emailText ? ('Texto del mail:\n' + emailText) : '',
     '',
-    'Devolvé SIEMPRE y ÚNICAMENTE un objeto JSON (no un array) con las claves: nombre, marca, subcategoria, palabras, especificacion, comentarios. Sin texto adicional, sin markdown.'
+    'Devolvé SIEMPRE y ÚNICAMENTE un objeto JSON (no un array) con EXACTAMENTE las claves: nombre, marca, subcategoria, palabras, especificacion, comentarios. Todas deben estar presentes (usá "" si no hay dato). Sin texto adicional, sin markdown.'
   ].filter(Boolean).join('\n');
-
-  const content = [{ type: 'text', text: contextLines }];
-  for(const file of (imageFiles||[])){
-    const b64 = await readFileAsBase64(file);
-    content.push({ type: 'image', source: { type: 'base64', media_type: file.type || 'image/jpeg', data: b64 } });
-  }
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -661,7 +658,7 @@ async function extractWithBrief(brief, emailText, imageFiles){
     body: JSON.stringify({
       model: "claude-sonnet-4-6",
       max_tokens: 1000,
-      messages: [ { role: "user", content } ]
+      messages: [ { role: "user", content: contextLines } ]
     })
   });
 
@@ -670,13 +667,7 @@ async function extractWithBrief(brief, emailText, imageFiles){
   }
   const data = await response.json();
   const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
-  let cleaned = textBlocks.trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
-  let parsed;
-  try{
-    parsed = JSON.parse(cleaned);
-  }catch(e){
-    throw new Error('No se pudo interpretar la respuesta de la IA. Probá de nuevo.');
-  }
+  const parsed = extractJSON(textBlocks);
 
   const conv1 = brief.unidXDisplay ? `Display (${brief.unidXDisplay} unidades)` : '';
   const conv2 = brief.dispXBulto ? `Bulto (${brief.dispXBulto} displays)` : '';
@@ -700,7 +691,6 @@ async function extractWithBrief(brief, emailText, imageFiles){
 document.getElementById('processBtn').addEventListener('click', async () => {
   const text = document.getElementById('emailInput').value.trim();
   const briefFile = briefInput.files[0];
-  const imageFiles = Array.from(imageInput.files || []);
 
   if(!text && !briefFile){
     statusEl.textContent = 'Pegá un mail o adjuntá el Brief Comercial primero.';
@@ -710,39 +700,41 @@ document.getElementById('processBtn').addEventListener('click', async () => {
 
   const btn = document.getElementById('processBtn');
   btn.disabled = true;
-  statusEl.textContent = briefFile ? 'Leyendo brief e imágenes...' : 'Analizando mail...';
+  statusEl.textContent = briefFile ? 'Leyendo el brief...' : 'Analizando mail...';
   statusEl.className = 'status';
 
   try{
     if(briefFile){
       const brief = await parseBrief(briefFile);
-      statusEl.textContent = 'Completando datos con la IA...';
-      const row = await extractWithBrief(brief, text, imageFiles);
-      rows.push(row);
-      render();
-      statusEl.textContent = 'Producto agregado. Revisá los datos antes de pasarlos a la planilla.';
+      if(!brief.codigo){
+        statusEl.textContent = 'Ojo: no encontré "Código Producto" en el brief — revisá el campo Código Arcor a mano en la tabla de abajo.';
+        statusEl.className = 'status err';
+      }
+      statusEl.textContent = (statusEl.className.includes('err') ? statusEl.textContent + ' ' : '') + 'Completando datos con la IA...';
+      const row = await extractWithBrief(brief, text);
+      addRows([row]);
+      statusEl.textContent = 'Producto agregado — lo tenés en la tabla de más abajo (paso 3), revisalo antes de pasarlo a la planilla.';
       statusEl.className = 'status ok';
     }else{
       const products = await extractProducts(text);
       const today = todayStr();
-      products.forEach(p => {
-        rows.push({
-          fecha: today,
-          nombre: p.nombre || '',
-          palabras: p.palabras || '',
-          marca: p.marca || '',
-          categoria: p.categoria || '',
-          subcategoria: p.subcategoria || '',
-          codigo: p.codigo || '',
-          conv1: p.conv1 || '',
-          conv2: p.conv2 || '',
-          especificacion: p.especificacion || 'UN-DI-BU',
-          estado: 'Completo',
-          comentarios: p.comentarios || ''
-        });
-      });
-      render();
-      statusEl.textContent = products.length + (products.length===1 ? ' producto agregado.' : ' productos agregados.') + ' Revisá los datos antes de pasarlos a la planilla.';
+      const newRows = products.map(p => ({
+        fecha: today,
+        nombre: p.nombre || '',
+        palabras: p.palabras || '',
+        marca: p.marca || '',
+        categoria: p.categoria || '',
+        subcategoria: p.subcategoria || '',
+        codigo: p.codigo || '',
+        conv1: p.conv1 || '',
+        conv2: p.conv2 || '',
+        especificacion: p.especificacion || 'UN-DI-BU',
+        estado: 'Completo',
+        comentarios: p.comentarios || ''
+      }));
+      addRows(newRows);
+      const sinCodigo = newRows.filter(r => !r.codigo).length;
+      statusEl.textContent = newRows.length + (newRows.length===1 ? ' producto agregado' : ' productos agregados') + ' en la tabla de más abajo (paso 3).' + (sinCodigo ? ' ' + sinCodigo + ' sin código de artículo — el mail no lo mencionaba, completalo a mano.' : ' Revisalo antes de pasarlo a la planilla.');
       statusEl.className = 'status ok';
     }
   }catch(err){
